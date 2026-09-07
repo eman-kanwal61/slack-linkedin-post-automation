@@ -1,0 +1,460 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1raw12FlC9WZ3wss_Ni45okyvg2aLmxLhm6ctygSuqkA",
+          "mode": "list",
+          "cachedResultName": "social media agent",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1raw12FlC9WZ3wss_Ni45okyvg2aLmxLhm6ctygSuqkA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1raw12FlC9WZ3wss_Ni45okyvg2aLmxLhm6ctygSuqkA/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        -192
+      ],
+      "id": "7be8bc34-25d8-4e6e-ac85-3e53a69e8aac",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "CipBWOfKSy0iHel1",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6cf7c293-cf52-4294-8d9e-66b3f8c38329",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "={{ $json.Status }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "4f03c0b8-dafc-490e-a1e5-9c50eb82b2d2",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -640,
+        -192
+      ],
+      "id": "57ca7112-f065-45b2-aacc-0faf06e7ccc2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Write the linkedin post for the topic\n{{ $('Google Sheets Trigger').item.json.Topic }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -416,
+        -208
+      ],
+      "id": "3c8bfb38-8372-4a78-84a0-274e7cade870",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-image-1",
+          "mode": "list",
+          "cachedResultName": "GPT-IMAGE-1"
+        },
+        "prompt": "=Generate an image that perfectly represent the Linkedin  post {{ $json.output[0].content[0].text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        -176
+      ],
+      "id": "f8cc592a-06c8-4df9-8588-c25d37226b46",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Google Sheets Trigger').item.json['Publsih date'] }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        176,
+        -112
+      ],
+      "id": "3206b806-5add-4281-8c0d-1bf04e81f407",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "QjBwPkzd9310nScx",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BL9RJ7S5Q",
+          "mode": "list",
+          "cachedResultName": "team-vibe-coding"
+        },
+        "message": "= Here's the Linkedin Post for{{ $('Google Sheets Trigger').item.json['Publsih date'] }}:\n\n{{ $('Message a model').item.json.output[0].content[0].text }}\n\nAlso the image :\n{{ $json.webViewLink }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        368,
+        -80
+      ],
+      "id": "3a2d34ad-3e63-400b-827b-b4547445a070",
+      "name": "Send message and wait for response",
+      "webhookId": "47ea4d69-0a44-491f-a6e2-f7a8943f9c6c",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "yzskDnYbs1naO66z",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0d933b97-932a-4a10-8777-eb8321c06c3d",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        560,
+        -80
+      ],
+      "id": "85394fc3-f3c8-4211-9ba1-4bd02bda9522",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BL9RJ7S5Q",
+          "mode": "list",
+          "cachedResultName": "team-vibe-coding"
+        },
+        "text": "This post has been published ",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        784,
+        -176
+      ],
+      "id": "def4234a-0bc5-4f8c-9874-5c897bba504f",
+      "name": "Send a message",
+      "webhookId": "75332019-d3ad-4216-9ac7-6a6acd3c3885",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "yzskDnYbs1naO66z",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1raw12FlC9WZ3wss_Ni45okyvg2aLmxLhm6ctygSuqkA",
+          "mode": "list",
+          "cachedResultName": "social media agent",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1raw12FlC9WZ3wss_Ni45okyvg2aLmxLhm6ctygSuqkA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1raw12FlC9WZ3wss_Ni45okyvg2aLmxLhm6ctygSuqkA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Publsih date": "={{ $('Google Sheets Trigger').item.json['Publsih date'] }}",
+            "Status": "Published"
+          },
+          "matchingColumns": [
+            "Publsih date"
+          ],
+          "schema": [
+            {
+              "id": "Publsih date",
+              "displayName": "Publsih date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        16
+      ],
+      "id": "0107f350-bd22-40d7-9c23-9d3923f53500",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "N8RyLOKM8fLdeLNP",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2422ac00-e048-4608-a199-f06377887e66",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7d2a2fd2d4e892763c5cd71fa07387d29f760d8382c734c3f20208bbf2ecf0e6"
+  },
+  "nodeGroups": [],
+  "id": "G3nxssbIlz82O7An",
+  "tags": []
+}
